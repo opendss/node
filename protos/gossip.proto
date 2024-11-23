@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package io.github.opendss.node.proto.gossip;
+
+message PushPull {
+  repeated NodeStats node_stats = 3;
+}
+
+service Gossip {
+  rpc pushPull(PushPull) returns (PushPull) {};
+
+  rpc ping(PingPacket) returns (PongPacket){};
+}
+
+
+enum CompressedAlgorithm {
+  Zstd = 0;
+}
+
+message PacketMetadata {
+  bool compress_enabled = 1;
+  CompressedAlgorithm compress_algorithm = 2;
+}
+
+message Packet {
+  PacketMetadata metadata = 1;
+  oneof payload {
+    bytes compressed_payload = 2;
+    RawPacketList raw_packets = 3;
+  }
+}
+
+message RawPacket {
+  oneof inner{
+    PingPacket ping_packet = 1;
+    PongPacket pong_packet = 2;
+    AlivePacket alive_packet = 3;
+    SuspectPacket suspect_packet = 4;
+    DeadPacket dead_packet = 5;
+  }
+}
+
+message RawPacketList {
+  repeated RawPacket raw_packet = 1;
+}
+
+message PiggybackPacket {
+  repeated Packet packet = 1;
+}
+
+message PingPacket {
+  uint64 seq = 1;
+
+  string source_node_id = 2;
+  string target_node_id = 3;
+
+  string source_address = 4;
+  optional string target_address = 5;
+}
+
+message PongPacket {
+  uint64 seq = 1;
+  Status status = 2;
+  bool nack = 3;
+}
+
+enum Status {
+  Ok = 0;
+}
+
+message SuspectPacket {
+  uint64 term = 1 ;
+  string node_id = 2;
+  string proposer = 3;
+}
+
+message AlivePacket {
+  uint64 term = 1;
+  string node_id = 2;
+  string node_address = 3;
+  NodeMetadata metadata = 4;
+}
+
+message DeadPacket {
+  uint64 term = 1;
+  string node_id = 2;
+  string proposer = 3;
+}
+
+
+enum NodeStatus {
+  ALIVE = 0;
+  DEAD = 1;
+  SUSPECT = 2;
+  LEFT = 3;
+}
+
+message NodeMetadata {
+
+}
+
+message NodeStats {
+  string node_id = 1;
+  string node_address = 2;
+  uint64 term = 3;
+  NodeStatus status = 4;
+  NodeMetadata metadata = 5;
+}
