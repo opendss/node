@@ -1,15 +1,18 @@
 use rand::rngs::ThreadRng;
 use rand::Rng;
 use std::ops::{Add, Mul};
+use std::sync::atomic;
+use std::sync::atomic::Ordering;
+use std::sync::atomic::Ordering::{Acquire, Release};
 use std::time::Duration;
 
-pub(crate) trait Backoff {
+pub trait Backoff {
     fn next_backoff(&mut self) -> Duration;
 
     fn reset(&mut self);
 }
 
-struct ExponentialBackoff {
+pub struct ExponentialBackoff {
     thread_rng: ThreadRng,
     init_backoff_nanos: u128,
     max_backoff_nanos: u128,
@@ -20,7 +23,7 @@ const EXPONENTIAL_MULTIPLIER: f64 = 1.6;
 const EXPONENTIAL_JITTER: f64 = 0.2;
 
 impl ExponentialBackoff {
-    fn new(init_backoff: Duration, max_backoff: Duration) -> Self {
+    pub fn new(init_backoff: Duration, max_backoff: Duration) -> Self {
         Self {
             thread_rng: rand::thread_rng(),
             init_backoff_nanos: init_backoff.as_nanos(),
@@ -47,28 +50,79 @@ impl Backoff for ExponentialBackoff {
     }
 }
 
+struct ScaleBackoff {
+    init_backoff_nanos: u128,
+    max_scale: u32,
+    current_scale: atomic::AtomicU32,
+}
+
+impl ScaleBackoff {
+    pub fn new(init_backoff: Duration, max_scale: u32) -> Self {
+        Self {
+            init_backoff_nanos: init_backoff.as_nanos(),
+            max_scale,
+            current_scale: atomic::AtomicU32::new(1),
+        }
+    }
+
+    pub fn set_scale(&mut self, scale: u32) {
+        let final_scale = if scale > self.max_scale {
+            self.max_scale
+        } else {
+            scale
+        };
+        self.current_scale.store(final_scale, Release);
+    }
+}
+
+impl Backoff for ScaleBackoff {
+    fn next_backoff(&mut self) -> Duration {
+        Duration::from_nanos(
+            (self.init_backoff_nanos as u64).mul(self.current_scale.load(Acquire) as u64),
+        )
+    }
+
+    fn reset(&mut self) {
+        self.current_scale.store(1, Ordering::Release)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::common::time::backoff::{Backoff, ExponentialBackoff};
+    use crate::common::time::backoff::{Backoff, ExponentialBackoff, ScaleBackoff};
     use std::time::Duration;
 
     #[test]
     fn test_exponential_backoff() {
         let mut eb = ExponentialBackoff::new(Duration::from_millis(100), Duration::from_secs(10));
         assert!(eb.next_backoff() <= Duration::from_millis(200));
-
         assert!(eb.next_backoff() <= Duration::from_millis(400));
-
         assert!(eb.next_backoff() >= Duration::from_millis(200));
-
         assert!(eb.next_backoff() >= Duration::from_millis(400));
         for __ in 0..100 {
             let _ = eb.next_backoff();
         }
         assert_eq!(eb.next_backoff(), Duration::from_secs(10));
-
         eb.reset();
-
         assert!(eb.next_backoff() <= Duration::from_millis(200));
+    }
+
+    #[test]
+    fn test_scale_backoff() {
+        let mut backoff = ScaleBackoff::new(Duration::from_millis(100), 3);
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(100));
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(100));
+        backoff.set_scale(2);
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(200));
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(200));
+        backoff.set_scale(3);
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(300));
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(300));
+        backoff.set_scale(4);
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(300));
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(300));
+        backoff.reset();
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(100));
+        assert_eq!(backoff.next_backoff(), Duration::from_millis(100));
     }
 }
