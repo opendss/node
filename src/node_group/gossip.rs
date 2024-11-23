@@ -1,4 +1,4 @@
-use crate::common::stateful::Stateful;
+use crate::common::lifecycle::stateful::Stateful;
 use crate::node_group::node_group::NodeGroup;
 use crate::node_group::options::Options;
 

@@ -1,4 +1,4 @@
-use crate::common::stateful::Stateful;
+use crate::common::lifecycle::stateful::Stateful;
 
 
 pub trait NodeGroup: Stateful {
