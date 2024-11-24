@@ -1,9 +1,9 @@
-use crate::node_group::broadcast_manager_policy::BroadCastPolicy;
 use crate::node_group::RawPacket;
 use prost::Message;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::sync::{atomic, Arc, RwLock};
+use crate::node_group::gossip::broadcast_manager_policy::BroadCastPolicy;
 
 struct BroadCastMessage {
     key: String,
@@ -123,10 +123,10 @@ impl BroadCastManager {
 
 #[cfg(test)]
 mod tests {
-    use crate::node_group::broadcast_manager::BroadCastManager;
-    use crate::node_group::broadcast_manager_policy::BroadCastPolicy;
     use crate::node_group::raw_packet::Inner;
     use crate::node_group::{PingPacket, RawPacket};
+    use crate::node_group::gossip::broadcast_manager::BroadCastManager;
+    use crate::node_group::gossip::broadcast_manager_policy::BroadCastPolicy;
 
     #[test]
     fn test_broadcast_manager_remove_same_key() {
