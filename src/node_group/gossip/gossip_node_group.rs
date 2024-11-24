@@ -60,7 +60,7 @@ where
                     target_address: Some(candidate.node_address.clone()),
                     source_address: host_address,
                 };
-                let result = self.unreliable_ping(ping_packet, &timeout).await;
+                // let result = self.unreliable_ping(ping_packet, &timeout).await;
             }
         }
     }
@@ -95,6 +95,7 @@ impl GossipNodeGroup {
         ping: PingPacket,
         timeout: &Duration,
     ) -> Result<PongPacket, Error> {
+        Ok(PongPacket::default())
     }
 }
 
