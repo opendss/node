@@ -1,4 +1,4 @@
 pub trait Stateful {
-    async fn start();
-    fn close();
+    async fn start(&mut self);
+    async fn close(&mut self);
 }

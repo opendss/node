@@ -1,6 +1,7 @@
 mod node_group;
 mod common;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("Hello, world!");
 }

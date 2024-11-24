@@ -1,16 +1,18 @@
-trait Selector<T> {
+use crate::common::lifecycle::stateful::Stateful;
+
+pub trait Selector<T> {
     fn next(&mut self) -> Option<&T>;
 }
 
-struct RoundRobinSelector<T, F> {
+#[derive(Clone)]
+pub struct RoundRobinSelector<T, F> {
     collection: Vec<T>,
     current_index: usize,
     skip_filter_fn: F,
 }
 impl<T, F> RoundRobinSelector<T, F>
 where
-    T: Ord,
-    F: Fn(&T) -> bool,
+    F: Fn(&T) -> bool + Send + Sync,
 {
     pub fn new(skip_filter_fn: F) -> Self {
         Self {
@@ -27,8 +29,7 @@ where
 
 impl<T, F> Selector<T> for RoundRobinSelector<T, F>
 where
-    T: Ord,
-    F: Fn(&T) -> bool,
+    F: Fn(&T) -> bool + Send + Sync,
 {
     fn next(&mut self) -> Option<&T> {
         let mut filtered_elements = 0;
@@ -57,6 +58,24 @@ where
             };
         }
         None
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct RandomSelector<T, F> {
+    collection: Vec<T>,
+    skip_filter_fn: F,
+}
+
+impl<T, F> RandomSelector<T, F>
+where
+    F: Fn(&T) -> bool + Send + Sync,
+{
+    pub fn new(skip_filter_fn: F) -> Self {
+        Self {
+            collection: Vec::new(),
+            skip_filter_fn,
+        }
     }
 }
 

@@ -50,7 +50,7 @@ impl Backoff for ExponentialBackoff {
     }
 }
 
-struct ScaleBackoff {
+pub(crate) struct ScaleBackoff {
     init_backoff_nanos: u128,
     max_scale: u32,
     current_scale: atomic::AtomicU32,
