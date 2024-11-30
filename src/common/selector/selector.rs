@@ -1,4 +1,5 @@
 use crate::common::lifecycle::stateful::Stateful;
+use crate::node_group::NodeStats;
 
 pub trait Selector<T> {
     fn next(&mut self) -> Option<&T>;
@@ -10,6 +11,9 @@ pub struct RoundRobinSelector<T, F> {
     current_index: usize,
     skip_filter_fn: F,
 }
+
+pub type SelectorFilterType = Box<dyn Fn(&NodeStats) -> bool + Send + Sync>;
+
 impl<T, F> RoundRobinSelector<T, F>
 where
     F: Fn(&T) -> bool + Send + Sync,
