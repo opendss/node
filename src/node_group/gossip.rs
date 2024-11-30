@@ -1,9 +1,6 @@
-mod broadcast_manager;
-mod broadcast_manager_policy;
-mod gossip_node_group;
-mod transport;
 mod errors;
-mod transport_handler;
-mod transport_grpc;
+mod gossip_state;
+mod gossip_node_group;
 mod gossip_probe;
-mod goosip_state;
+mod transport;
+mod broadcast;

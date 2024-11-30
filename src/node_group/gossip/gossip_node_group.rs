@@ -4,10 +4,9 @@ use crate::common::selector::selector::{
     RandomSelector, RoundRobinSelector, Selector, SelectorFilterType,
 };
 use crate::common::time::backoff::{Backoff, ScaleBackoff};
-use crate::node_group::gossip::goosip_state::State;
+use crate::node_group::gossip::gossip_state::State;
 use crate::node_group::gossip::gossip_probe::ProbeTask;
 use crate::node_group::gossip::transport::Transport;
-use crate::node_group::gossip::transport_grpc::GrpcTransport;
 use crate::node_group::node_group::NodeGroup;
 use crate::node_group::options::Options;
 use crate::node_group::{NodeStats, PingPacket, PongPacket};
@@ -22,31 +21,36 @@ use tokio::time;
 use tonic::client::Grpc;
 use tracing::warn;
 
-pub(crate) struct GossipNodeGroup {
+pub(crate) struct GossipNodeGroup<T>
+where
+    T: Transport,
+{
     option: Arc<Options>,
     state: Arc<State>,
-    transport: T,
     probe_handle: Option<JoinHandle<()>>,
+    transport: T,
 }
 
-impl GossipNodeGroup {
-    pub fn new(option: Options) -> Self {
+impl<T> GossipNodeGroup<T>
+where
+    T: Transport,
+{
+    pub fn new(option: Options, transport: T) -> Self {
         let shard_option = Arc::new(option);
         let state = Arc::new(State::new());
-        let result = SocketAddr::from_str("127.0.0.1");
-        if result.is_err() {
-            panic!("unexpected socket address");
-        }
         Self {
             option: shard_option.clone(),
             state: state.clone(),
             probe_handle: None,
-            transport: GrpcTransport::new(result.unwrap()),
+            transport,
         }
     }
 }
 
-impl Stateful for GossipNodeGroup {
+impl<T> Stateful for GossipNodeGroup<T>
+where
+    T: Transport,
+{
     async fn start(&mut self) -> Result<(), CommonError> {
         let option = self.option.clone();
         let state = self.state.clone();
@@ -78,4 +82,3 @@ impl Stateful for GossipNodeGroup {
         Ok(())
     }
 }
-impl NodeGroup for GossipNodeGroup {}

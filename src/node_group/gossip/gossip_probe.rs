@@ -2,7 +2,7 @@ use crate::common::selector::selector::{
     RandomSelector, RoundRobinSelector, Selector, SelectorFilterType,
 };
 use crate::common::time::backoff::{Backoff, ScaleBackoff};
-use crate::node_group::gossip::goosip_state::State;
+use crate::node_group::gossip::gossip_state::State;
 use crate::node_group::gossip::transport::Transport;
 use crate::node_group::options::Options;
 use crate::node_group::{NodeStats, PingPacket};

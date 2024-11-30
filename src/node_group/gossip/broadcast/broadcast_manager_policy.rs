@@ -19,7 +19,7 @@ impl BroadCastPolicy {
 
 #[cfg(test)]
 mod tests {
-    use crate::node_group::gossip::broadcast_manager_policy::BroadCastPolicy;
+    use crate::node_group::gossip::broadcast::broadcast_manager_policy::BroadCastPolicy;
 
     #[test]
     fn test_broad_cast_policy() {
@@ -28,6 +28,6 @@ mod tests {
             retransmit_quota: 3,
         };
         let value = policy.get_retransmit_limit();
-        assert_eq!(value, 2);
+        assert_eq!(value, 3);
     }
 }

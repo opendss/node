@@ -1,9 +1,9 @@
+use crate::node_group::gossip::broadcast::broadcast_manager_policy::BroadCastPolicy;
 use crate::node_group::RawPacket;
 use prost::Message;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::sync::{atomic, Arc, RwLock};
-use crate::node_group::gossip::broadcast_manager_policy::BroadCastPolicy;
 
 struct BroadCastMessage {
     key: String,
@@ -46,8 +46,8 @@ pub(crate) struct BroadCastManager {
 }
 
 pub(crate) struct MemoryCache {
-    queue: BinaryHeap<Arc<Box<BroadCastMessage>>>,
-    index: HashMap<String, Arc<Box<BroadCastMessage>>>,
+    queue: BinaryHeap<Arc<BroadCastMessage>>,
+    index: HashMap<String, Arc<BroadCastMessage>>,
 }
 
 impl Default for MemoryCache {
@@ -64,12 +64,12 @@ impl BroadCastManager {
         self.memory_cache.read().unwrap().index.len()
     }
     fn offer(&mut self, key: String, message: RawPacket) {
-        let message_arc = Arc::new(Box::new(BroadCastMessage {
+        let message_arc = Arc::new(BroadCastMessage {
             key: key.clone(),
             packet: message,
             transmit_count: INIT_TRANSMIT,
             invalid: atomic::AtomicBool::new(false),
-        }));
+        });
         let mut memory_cache = self.memory_cache.write().unwrap();
         let previous = memory_cache.index.insert(key, message_arc.clone());
         if let Some(previous) = previous {
@@ -78,7 +78,7 @@ impl BroadCastManager {
         memory_cache.queue.push(message_arc);
     }
 
-    fn get_broadcast_messages(&mut self, limit_size: usize) -> Vec<Arc<Box<BroadCastMessage>>> {
+    fn get_broadcast_messages(&mut self, limit_size: usize) -> Vec<Arc<BroadCastMessage>> {
         let mut vec = Vec::new();
         let mut memory_cache = self.memory_cache.write().unwrap();
         let mut current_size = 0;
@@ -123,10 +123,10 @@ impl BroadCastManager {
 
 #[cfg(test)]
 mod tests {
+    use crate::node_group::gossip::broadcast::broadcast_manager::BroadCastManager;
+    use crate::node_group::gossip::broadcast::broadcast_manager_policy::BroadCastPolicy;
     use crate::node_group::raw_packet::Inner;
     use crate::node_group::{PingPacket, RawPacket};
-    use crate::node_group::gossip::broadcast_manager::BroadCastManager;
-    use crate::node_group::gossip::broadcast_manager_policy::BroadCastPolicy;
 
     #[test]
     fn test_broadcast_manager_remove_same_key() {
