@@ -50,7 +50,7 @@ impl RandomIndexSelector {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::selector::selector::RoundRobinIndexSelector;
+    use crate::common::selector::selector::{RandomIndexSelector, RoundRobinIndexSelector};
     #[test]
     fn test_round_robin_index_selector() {
         let init_size = 10;
@@ -65,6 +65,12 @@ mod tests {
 
     #[test]
     fn test_random_index_selector() {
-        
+        let init_size = 10;
+        let mut selector = RandomIndexSelector::new(init_size);
+        let selected_indexes_1 = selector.next(5);
+        assert_eq!(5, selected_indexes_1.len());
+        let selected_indexes_2 = selector.next(5);
+        assert_eq!(5, selected_indexes_2.len());
+        assert_ne!(selected_indexes_1, selected_indexes_2);
     }
 }
