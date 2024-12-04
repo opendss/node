@@ -1,128 +1,70 @@
 use crate::common::lifecycle::stateful::Stateful;
-use crate::node_group::NodeStats;
+use rand::{Rng, RngCore};
+use std::collections::HashSet;
 
-pub trait Selector<T> {
-    fn next(&mut self) -> Option<&T>;
+pub(crate) struct RoundRobinIndexSelector {
+    index_size: u32,
+    current_index: u32,
 }
 
-#[derive(Clone)]
-pub struct RoundRobinSelector<T, F> {
-    collection: Vec<T>,
-    current_index: usize,
-    skip_filter_fn: F,
-}
-
-pub type SelectorFilterType = Box<dyn Fn(&NodeStats) -> bool + Send + Sync>;
-
-impl<T, F> RoundRobinSelector<T, F>
-where
-    F: Fn(&T) -> bool + Send + Sync,
-{
-    pub fn new(skip_filter_fn: F) -> Self {
+impl RoundRobinIndexSelector {
+    pub fn new(init_size: u32) -> Self {
         Self {
-            collection: Vec::new(),
+            index_size: init_size,
             current_index: 0,
-            skip_filter_fn,
         }
     }
 
-    pub fn add(&mut self, element: T) {
-        self.collection.push(element);
-    }
-}
-
-impl<T, F> Selector<T> for RoundRobinSelector<T, F>
-where
-    F: Fn(&T) -> bool + Send + Sync,
-{
-    fn next(&mut self) -> Option<&T> {
-        let mut filtered_elements = 0;
-        while self.current_index < self.collection.len()
-            && filtered_elements != self.collection.len()
-        {
-            let el = self.collection.get(self.current_index);
-            match el {
-                None => {
-                    self.current_index = 0;
-                    continue;
-                }
-                Some(el) => {
-                    // move index
-                    if self.current_index == self.collection.len() - 1 {
-                        self.current_index = 0;
-                    } else {
-                        self.current_index += 1;
-                    }
-                    if (self.skip_filter_fn)(el) {
-                        filtered_elements += 1;
-                        continue;
-                    }
-                    return Some(el);
-                }
-            };
+    pub(crate) fn next(&mut self) -> u32 {
+        if self.current_index == self.index_size {
+            self.current_index = 0;
         }
-        None
+        let index = self.current_index;
+        self.current_index += 1;
+        index
     }
 }
 
-#[derive(Clone)]
-pub(crate) struct RandomSelector<T, F> {
-    collection: Vec<T>,
-    skip_filter_fn: F,
+pub(crate) struct RandomIndexSelector {
+    rng: rand::rngs::ThreadRng,
+    index_size: u32,
 }
 
-impl<T, F> RandomSelector<T, F>
-where
-    F: Fn(&T) -> bool + Send + Sync,
-{
-    pub fn new(skip_filter_fn: F) -> Self {
+impl RandomIndexSelector {
+    pub fn new(init_size: u32) -> Self {
         Self {
-            collection: Vec::new(),
-            skip_filter_fn,
+            index_size: init_size,
+            rng: rand::thread_rng(),
         }
+    }
+
+    fn next(&mut self, num: u32) -> HashSet<u32> {
+        let mut vec: HashSet<u32> = HashSet::new();
+        while vec.len() < num as usize {
+            let i = self.rng.gen_range(0..self.index_size);
+            vec.insert(i);
+        }
+        vec
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::common::selector::selector::{RoundRobinSelector, Selector};
+    use crate::common::selector::selector::RoundRobinIndexSelector;
     #[test]
-    fn test_round_robin_selector_with_always_filter() {
-        let filter = |x: &String| true;
-        let mut selector = RoundRobinSelector::new(filter);
-        selector.add(String::from("1"));
-        let option = selector.next();
-        assert!(option.is_none());
+    fn test_round_robin_index_selector() {
+        let init_size = 10;
+        let mut selector = RoundRobinIndexSelector::new(init_size);
+        for i in 0..init_size {
+            let index = selector.next();
+            assert_eq!(i, index);
+        }
+        let index = selector.next();
+        assert_eq!(0, index);
     }
 
     #[test]
-    fn test_round_robin_selector_with_one_filter() {
-        let filter = |x: &String| x == "1";
-        let mut selector = RoundRobinSelector::new(filter);
-        selector.add(String::from("1"));
-        selector.add(String::from("2"));
-        let option = selector.next();
-        assert!(option.is_some());
-        assert_eq!(option.unwrap(), "2");
-    }
-
-    #[test]
-    fn test_round_robin_selector_without_filter() {
-        let no_filter = |x: &String| false;
-        let mut selector = RoundRobinSelector::new(no_filter);
-        selector.add(String::from("1"));
-        selector.add(String::from("2"));
-
-        let option = selector.next();
-        assert!(option.is_some());
-        assert_eq!(option.unwrap(), "1");
-
-        let option = selector.next();
-        assert!(option.is_some());
-        assert_eq!(option.unwrap(), "2");
-
-        let option = selector.next();
-        assert!(option.is_some());
-        assert_eq!(option.unwrap(), "1");
+    fn test_random_index_selector() {
+        
     }
 }

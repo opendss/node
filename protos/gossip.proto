@@ -60,7 +60,6 @@ message PingPacket {
 
 message PongPacket {
   uint64 seq = 1;
-  Status status = 2;
   bool nack = 3;
 }
 

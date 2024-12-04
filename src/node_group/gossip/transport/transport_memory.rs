@@ -7,6 +7,7 @@ use tonic::async_trait;
 
 struct MemoryTransport {}
 
+#[async_trait]
 impl Stateful for MemoryTransport {
     async fn start(&mut self) -> Result<(), CommonError> {
         todo!()

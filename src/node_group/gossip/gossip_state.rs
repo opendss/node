@@ -1,16 +1,26 @@
 use crate::node_group::NodeStats;
 use dashmap::DashMap;
-use std::sync::atomic;
+use std::sync::{atomic, Arc};
 
+#[derive(Clone)]
 pub struct State {
-    pub(crate) sequence_generator: atomic::AtomicU64,
-    nodes: DashMap<String, NodeStats>,
+    inner: Arc<Inner>,
 }
+
+struct Inner {
+    sequence_generator: atomic::AtomicU64,
+    nodes: DashMap<String, NodeStats>,
+    node_name_index: Vec<String>,
+}
+
 impl State {
     pub fn new() -> Self {
         Self {
-            sequence_generator: atomic::AtomicU64::new(0),
-            nodes: DashMap::new(),
+            inner: Arc::new(Inner {
+                sequence_generator: atomic::AtomicU64::new(0),
+                nodes: DashMap::new(),
+                node_name_index: Vec::new(),
+            }),
         }
     }
 }
