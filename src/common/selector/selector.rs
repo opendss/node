@@ -1,5 +1,4 @@
-use crate::common::lifecycle::stateful::Stateful;
-use rand::{Rng, RngCore};
+use rand::{Rng, SeedableRng};
 use std::collections::HashSet;
 
 pub(crate) struct RoundRobinIndexSelector {
@@ -26,7 +25,7 @@ impl RoundRobinIndexSelector {
 }
 
 pub(crate) struct RandomIndexSelector {
-    rng: rand::rngs::ThreadRng,
+    rng: rand::rngs::StdRng,
     index_size: u32,
 }
 
@@ -34,11 +33,11 @@ impl RandomIndexSelector {
     pub fn new(init_size: u32) -> Self {
         Self {
             index_size: init_size,
-            rng: rand::thread_rng(),
+            rng: rand::rngs::StdRng::from_entropy(),
         }
     }
 
-    fn next(&mut self, num: u32) -> HashSet<u32> {
+    pub fn next(&mut self, num: u32) -> HashSet<u32> {
         let mut vec: HashSet<u32> = HashSet::new();
         while vec.len() < num as usize {
             let i = self.rng.gen_range(0..self.index_size);

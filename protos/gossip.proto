@@ -52,9 +52,9 @@ message PingPacket {
   uint64 seq = 1;
 
   string source_node_id = 2;
-  string target_node_id = 3;
-
   string source_address = 4;
+
+  string target_node_id = 3;
   optional string target_address = 5;
 }
 

@@ -13,6 +13,7 @@ tokio = { version = "1", features = ["full"] }
 dashmap = "6.1.0"
 thiserror = "2"
 serde = { version = "1.0.215", features = ["derive"] }
+static_assertions = "1.1.0"
 
 
 [build-dependencies]

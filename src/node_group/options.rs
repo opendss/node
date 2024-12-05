@@ -29,3 +29,20 @@ impl Inner {
         }
     }
 }
+
+impl Options {
+    pub fn probe_timeout(&self) -> Duration {
+        self.inner.probe_timeout
+    }
+    pub fn bind_address(&self) -> SocketAddr {
+        self.inner.bind_address
+    }
+
+    pub fn node_id(&self) -> &str {
+        self.inner.node_id.as_str()
+    }
+    
+    pub fn indirect_check_num(&self) -> u32 {
+        self.inner.indirect_check_num
+    }
+}
