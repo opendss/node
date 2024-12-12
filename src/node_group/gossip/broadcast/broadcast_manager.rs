@@ -40,12 +40,14 @@ impl Ord for BroadCastMessage {
 }
 
 const INIT_TRANSMIT: u32 = 0;
-pub(crate) struct BroadCastManager {
+
+#[derive(Clone)]
+pub struct BroadCastManager {
     memory_cache: Arc<RwLock<MemoryCache>>,
     policy: BroadCastPolicy,
 }
 
-pub(crate) struct MemoryCache {
+pub struct MemoryCache {
     queue: BinaryHeap<Arc<BroadCastMessage>>,
     index: HashMap<String, Arc<BroadCastMessage>>,
 }

@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub(crate) struct BroadCastPolicy {
     pub(crate) node_num: u32,
     pub(crate) retransmit_quota: u32,

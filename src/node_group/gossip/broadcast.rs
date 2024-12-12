@@ -1,2 +1,2 @@
-mod broadcast_manager;
-mod broadcast_manager_policy;
+pub mod broadcast_manager;
+pub mod broadcast_manager_policy;
