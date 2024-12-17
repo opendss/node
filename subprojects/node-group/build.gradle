@@ -1,0 +1,34 @@
+plugins {
+    alias(libs.plugins.protobuf)
+    id "java-library"
+}
+
+dependencies {
+    implementation project(":subprojects:common")
+
+    implementation libs.protobuf.java
+    // todo: cut branches of netty-all
+    implementation libs.netty.all
+    // todo: cut branches of grpc-all
+    implementation libs.grpc.all
+    implementation libs.slf4j
+    implementation libs.oshi
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+}
+
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.28.0"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.68.0"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}

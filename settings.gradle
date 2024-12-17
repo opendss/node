@@ -1,0 +1,5 @@
+rootProject.name = 'node'
+
+
+include("subprojects:common")
+include("subprojects:node-group")

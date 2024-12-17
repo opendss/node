@@ -1,0 +1,25 @@
+[versions]
+spotless = "7.0.0.BETA2"
+protobuf = "0.9.4"
+protobuf-java = "4.28.0"
+netty = "4.1.113.Final"
+lombok = "1.18.34"
+junit = "5.11.2"
+grpc = "1.68.0"
+slf4j = "2.0.16"
+oshi = "6.6.5"
+
+
+[libraries]
+protobuf-java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf-java" }
+netty-all = { group = "io.netty", name = "netty-all", version.ref = "netty" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+grpc-all = { group = "io.grpc", name = "grpc-all", version.ref = "grpc" }
+slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+oshi = { group = "com.github.oshi", name = "oshi-core-java11", version.ref = "oshi" }
+
+[bundles]
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }

@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    alias(libs.plugins.spotless)
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: libs.plugins.spotless.get().pluginId
+
+    println()
+
+    dependencies {
+        // lombok
+        compileOnly libs.lombok
+        annotationProcessor libs.lombok
+        testCompileOnly libs.lombok
+        testAnnotationProcessor libs.lombok
+        // junit
+        testImplementation(platform("org.junit:junit-bom:${libs.versions.junit.get()}"))
+        testImplementation('org.junit.jupiter:junit-jupiter')
+        testRuntimeOnly('org.junit.platform:junit-platform-launcher')
+    }
+
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    spotless {
+        java {
+            // optional: you can specify import groups directly
+            // note: you can use an empty string for all the imports you didn't specify explicitly, '|' to join group without blank line, and '\\#` prefix for static imports
+            importOrder('java|javax', 'com.acme', '', '\\#com.acme', '\\#')
+            cleanthat()
+            googleJavaFormat()
+            formatAnnotations()
+            licenseHeader '/* (C) $YEAR */' // or licenseHeaderFile
+            targetExclude("**/proto/**/*.java")
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
